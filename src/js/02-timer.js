@@ -1,12 +1,7 @@
-// Описаний в документації
 import flatpickr from 'flatpickr';
-// Додатковий імпорт стилів
 import 'flatpickr/dist/flatpickr.min.css';
 import swal from 'sweetalert';
-
 import { Report } from 'notiflix/build/notiflix-report-aio';
-
-// swal("Hello world!");
 
 const inputEl = document.getElementById('datetime-picker');
 const btn = document.querySelector('[data-start]');
@@ -19,19 +14,14 @@ let counter;
 btn.disabled = true;
 
 function convertMs(ms) {
-  // Number of milliseconds per unit of time
   const second = 1000;
   const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
 
-  // Remaining days
   const days = Math.floor(ms / day);
-  // Remaining hours
   const hours = Math.floor((ms % day) / hour);
-  // Remaining minutes
   const minutes = Math.floor(((ms % day) % hour) / minute);
-  // Remaining seconds
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
@@ -48,7 +38,7 @@ const options = {
   minuteIncrement: 1,
   onClose(selectedDates) {
     const selectedDate = selectedDates[0];
-    const currentDate = new Date();
+    const currentDate = Date.now();
 
     if (selectedDate < currentDate) {
       swal('Please choose a date in the future');
@@ -59,12 +49,14 @@ const options = {
     }
   },
 };
+
 const displayTime = timeBack => {
   const { days, hours, minutes, seconds } = convertMs(timeBack);
   daysEl.textContent = addLeadingZero(days);
   hoursEl.textContent = addLeadingZero(hours);
   minutesEl.textContent = addLeadingZero(minutes);
   secondsEl.textContent = addLeadingZero(seconds);
+
   if (timeBack <= 0) {
     Report.success('Time is ended', '', 'Okay');
     clearInterval(counter);
@@ -72,7 +64,6 @@ const displayTime = timeBack => {
     hoursEl.textContent = '00';
     minutesEl.textContent = '00';
     secondsEl.textContent = '00';
-
     inputEl.disabled = false;
   }
 };
@@ -83,20 +74,24 @@ btn.addEventListener('click', onClick);
 
 function onClick() {
   const selectedDate = flatFunc.selectedDates[0];
-  const currentDate = new Date();
+  const currentDate = Date.now();
 
   if (selectedDate > currentDate) {
-    const time = selectedDate.getTime() - currentDate.getTime();
+    const time = selectedDate.getTime() - currentDate;
 
     displayTime(time);
 
     counter = setInterval(() => {
-      const timeUpdate = selectedDate.getTime() - new Date().getTime();
-      displayTime(timeUpdate);
-
-      if (timeUpdate <= 0) {
-        clearInterval(counter);
-      }
+      updateDisplay(selectedDate);
     }, 1000);
+  }
+}
+
+function updateDisplay(selectedDate) {
+  const timeUpdate = selectedDate.getTime() - Date.now();
+  displayTime(timeUpdate);
+
+  if (timeUpdate <= 0) {
+    clearInterval(counter);
   }
 }
