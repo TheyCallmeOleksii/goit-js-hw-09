@@ -1,46 +1,22 @@
+// Описаний в документації
 import flatpickr from 'flatpickr';
+// Додатковий імпорт стилів
 import 'flatpickr/dist/flatpickr.min.css';
+import swal from 'sweetalert';
 
-import Notiflix from 'notiflix';
+import { Report } from 'notiflix/build/notiflix-report-aio';
 
-const inputData = document.getElementById('datetime-picker');
-const btnStart = document.querySelector('[data-start]');
+// swal("Hello world!");
 
-const dataDay = document.querySelector('[data-days]');
-const dataHours = document.querySelector('[data-hours]');
-const dataMinutes = document.querySelector('[data-minutes]');
-const dataSeconds = document.querySelector('[data-seconds]');
+const inputEl = document.getElementById('datetime-picker');
+const btn = document.querySelector('[data-start]');
+const secondsEl = document.querySelector('[data-seconds]');
+const minutesEl = document.querySelector('[data-minutes]');
+const hoursEl = document.querySelector('[data-hours]');
+const daysEl = document.querySelector('[data-days]');
 
-btnStart.addEventListener('click', onStart);
-// reset page
-btnStart.disabled = true;
-dataDay.textContent = '00';
-dataHours.textContent = '00';
-dataMinutes.textContent = '00';
-dataSeconds.textContent = '00';
-inputData.value = '';
-
-let timerId = null;
-const dataNow = new Date();
-let dataSelect = new Date();
-
-const options = {
-  enableTime: true,
-  time_24hr: true,
-  defaultDate: new Date(),
-  minuteIncrement: 1,
-  onClose(selectedDates) {
-    dataSelect = selectedDates[0];
-    if (dataSelect < dataNow) {
-      btnStart.disabled = true;
-      Notiflix.Notify.warning('Please choose a date in the future');
-    } else {
-      btnStart.disabled = false;
-    }
-  },
-};
-
-flatpickr('#datetime-picker', options);
+let counter;
+btn.disabled = true;
 
 function convertMs(ms) {
   // Number of milliseconds per unit of time
@@ -61,38 +37,66 @@ function convertMs(ms) {
   return { days, hours, minutes, seconds };
 }
 
-function onStart() {
-  if (dataSelect <= new Date()) {
-    Notiflix.Notify.warning('Please choose a date in the future');
-    return;
-  }
-
-  btnStart.disabled = true;
-  inputData.disabled = true;
-
-  timerId = setInterval(() => {
-    const dataNow = new Date();
-    const objMs = convertMs(dataSelect.getTime() - dataNow.getTime());
-
-    dataDay.textContent = addLeadingZero(objMs.days);
-    dataHours.textContent = addLeadingZero(objMs.hours);
-    dataMinutes.textContent = addLeadingZero(objMs.minutes);
-    dataSeconds.textContent = addLeadingZero(objMs.seconds);
-
-    console.log(inputData.disabled);
-    if (
-      objMs.days === 0 &&
-      objMs.hours === 0 &&
-      objMs.minutes === 0 &&
-      objMs.seconds === 0
-    ) {
-      clearInterval(timerId);
-      inputData.disabled = false;
-      btnStart.disabled = false;
-    }
-  }, 1000);
-}
-
 function addLeadingZero(value) {
   return value.toString().padStart(2, '0');
+}
+
+const options = {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onClose(selectedDates) {
+    const selectedDate = selectedDates[0];
+    const currentDate = new Date();
+
+    if (selectedDate < currentDate) {
+      swal('Please choose a date in the future');
+      btn.disabled = true;
+    } else {
+      inputEl.disabled = true;
+      btn.disabled = false;
+    }
+  },
+};
+const displayTime = timeBack => {
+  const { days, hours, minutes, seconds } = convertMs(timeBack);
+  daysEl.textContent = addLeadingZero(days);
+  hoursEl.textContent = addLeadingZero(hours);
+  minutesEl.textContent = addLeadingZero(minutes);
+  secondsEl.textContent = addLeadingZero(seconds);
+  if (timeBack <= 0) {
+    Report.success('Time is ended', '', 'Okay');
+    clearInterval(counter);
+    daysEl.textContent = '00';
+    hoursEl.textContent = '00';
+    minutesEl.textContent = '00';
+    secondsEl.textContent = '00';
+
+    inputEl.disabled = false;
+  }
+};
+
+const flatFunc = flatpickr(inputEl, options);
+
+btn.addEventListener('click', onClick);
+
+function onClick() {
+  const selectedDate = flatFunc.selectedDates[0];
+  const currentDate = new Date();
+
+  if (selectedDate > currentDate) {
+    const time = selectedDate.getTime() - currentDate.getTime();
+
+    displayTime(time);
+
+    counter = setInterval(() => {
+      const timeUpdate = selectedDate.getTime() - new Date().getTime();
+      displayTime(timeUpdate);
+
+      if (timeUpdate <= 0) {
+        clearInterval(counter);
+      }
+    }, 1000);
+  }
 }

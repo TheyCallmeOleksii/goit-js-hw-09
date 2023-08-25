@@ -17,19 +17,21 @@ img {
   max-width: 100%;
 }
 
+.field {
+  text-align: center;
+  width: 100px;
+  height: 50px;
+  border-radius: 5px;
+
+  margin-top: 20px;
+  margin-left: 5px;
+  margin-right: 5px;
+  padding-top: 10px;
+  background-color: aquamarine;
+  border: #000 1px solid;
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 19px 38px,
+    rgba(0, 0, 0, 0.22) 0px 15px 12px;
+}
 .timer {
   display: flex;
-  flex-direction: row;
-  gap: 20px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.value {
-  font-size: 20px;
-  font-weight: 700;
 }
